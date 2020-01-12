@@ -9,11 +9,17 @@ TYPES = {
 }
 
 FUNCS = {
-    "print":        "my_printf",
-    "tonumber":     "my_nbr_to_str",
-    "tostring":     "my_getnbr",
-    "lowercase":    "my_strlowcase",
-    "upcase":       "my_strupcase"
+    "print":        {name: "my_printf", ret_type: "NumericLiteral"},
+    "tonumber":     {name: "my_nbr_to_str", ret_type: "StringLiteral"},
+    "tostring":     {name: "my_getnbr", ret_type: "NumericLiteral"},
+    "lowercase":    {name: "my_strlowcase", ret_type: "StringLiteral"},
+    "upcase":       {name: "my_strupcase", ret_type: "StringLiteral"},
+}
+
+FUNCS_SPECIAL_FORMAT = {
+    "print":    (args) => {
+        return (args);
+    }
 }
 
 module.exports = {TYPES, FUNCS};

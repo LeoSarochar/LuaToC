@@ -51,7 +51,7 @@ class Lua_converter {
 
     convertFunc(name) {
         if (FUNCS[name])
-            return (FUNCS[name]);
+            return (FUNCS[name].name);
         else
             return (name);
     }
