@@ -1,5 +1,5 @@
 local function affiche(str, nb)
-    local test, d = "Bonjour"
+    local test, d = "Bonjour", "Au revoir"
 
     if nb < 1 then
         print("Erreur")

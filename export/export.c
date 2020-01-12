@@ -12,7 +12,7 @@
 static void    affiche(char *str, int nb)
 {
     char *test = "Bonjour";
-    char *d = "Bonjour";
+    char *d = "Au revoir";
 
     if (nb < 1) {
         my_printf("Erreur");
