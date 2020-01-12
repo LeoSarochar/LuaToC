@@ -63,3 +63,4 @@ char *my_base_to_dec(char *, char *);
 char *my_dec_to_base(char *, char *);
 char *my_realloc(char *, int);
 int my_putnbr_base(int, char const *);
+char *my_nbr_to_str(int);

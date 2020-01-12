@@ -15,8 +15,10 @@ class C_writter {
         return (includes);
     }
 
-    static create_function(name, args, body, return_type) {
+    static create_function(name, args, body, return_type, is_static) {
         var func = "";
+        if (is_static)
+            func += "static ";
         func += return_type;
         func += "    ";
         func += name + "(";

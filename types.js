@@ -9,7 +9,11 @@ TYPES = {
 }
 
 FUNCS = {
-    "print":    "my_putstr"
+    "print":        "my_printf",
+    "tonumber":     "my_nbr_to_str",
+    "tostring":     "my_getnbr",
+    "lowercase":    "my_strlowcase",
+    "upcase":       "my_strupcase"
 }
 
 module.exports = {TYPES, FUNCS};

@@ -21,11 +21,10 @@ void    print_format(int show_sign, char repet_c, int x, char *str)
     if (nb < 0) {
         my_putchar('-');
         str = str_move(str);
-    } else
-        if (show_sign == 1) {
-            my_putchar('+');
-            x -= 1;
-        }
+    } else if (show_sign == 1) {
+        my_putchar('+');
+        x -= 1;
+    }
     if (repet_c == '0')
         for (int i = 0; i < x; i++)
             my_putchar(repet_c);
@@ -85,15 +84,15 @@ int    pre_parse(va_list ap, int i, char *str)
     result = run_func(c, ap);
     if (result.result == 1 && result.str != NULL)
         my_putstr(result.str);
-    else if (result.result == 0) {
-        x = parse(i, str, ap);
-        if (x == 1) {
-            my_putchar('%');
-            my_putchar(c);
-        }
-        return (x);
+    else if (result.result != 0) {
+        return (1)
     }
-    return (1);
+    x = parse(i, str, ap);
+    if (x == 1) {
+        my_putchar('%');
+        my_putchar(c);
+    }
+    return (x);
 }
 
 int    my_printf(char *str, ...)
@@ -102,9 +101,9 @@ int    my_printf(char *str, ...)
 
     va_start(ap, str);
     for (int i = 0; str[i]; i++) {
-        if (str[i] == '%') {
+        if (str[i] == '%')
             i += pre_parse(ap, i, str);
-        } else
+        else
             my_putchar(str[i]);
     }
     va_end(ap);

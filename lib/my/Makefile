@@ -56,6 +56,7 @@ SRC	=	my_compute_power_rec.c  		\
 		my_printf_funcs_bases.c			\
 		my_printf_utils.c			\
 		my_putnbr_base.c			\
+		my_nbr_to_str.c
 
 OBJ	=	$(SRC:.c=.o)
 
