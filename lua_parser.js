@@ -39,6 +39,9 @@ class Lua_parser {
             case "ForNumericStatement":
                 ret_code += this.converter.convertForNumeric(object);
                 break;
+            case "WhileStatement":
+                ret_code += this.converter.convertWhile(object);
+                break;
             case "ReturnStatement":
                 ret_code += this.converter.convertReturn(object);
                 break;
@@ -111,13 +114,28 @@ class Lua_parser {
         return (null);
     }
 
+    getVariableType(object) {
+        return (this.converter.convertType(object));
+    }
+
     getFunctionReturnType(body) {
         for (let i = 0; body[i]; i++) {
-            if (body[i].type == "ReturnStatement")
+            if (body[i].type == "ReturnStatement") {
                 if (body[i].arguments[0])
                     return (this.converter.convertType(body[i].arguments[0]));
                 else
                     return ("void");
+            }
+        }
+        return ("void");
+    }
+
+    getSpecificFunctionReturnType(name) {
+        for (let i = 0; this.ast.body[i]; i++) {
+            if (this.ast.body[i].type == "FunctionDeclaration" && this.ast.body[i].identifier.name == name) {
+                const type = this.getFunctionReturnType(this.ast.body[i].body);
+                return (type);
+            }
         }
         return ("void");
     }

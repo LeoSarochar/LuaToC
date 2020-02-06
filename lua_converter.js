@@ -59,7 +59,6 @@ class Lua_converter {
     convertType(object) {
         let ret_type = "void";
         let is_array = false;
-
         let converted_type = TYPES[object.type];
         if (converted_type)
             ret_type = converted_type;
@@ -86,6 +85,13 @@ class Lua_converter {
                                     ret_type = this.convertType(arg);
                             }
                         }
+                    }
+                    break;
+                case "CallExpression":
+                    if (FUNCS[object.base.name]) {
+                        ret_type = this.convertType({type: FUNCS[object.base.name].ret_type});
+                    } else {
+                        ret_type = this.Lua.getSpecificFunctionReturnType(object.base.name);
                     }
                     break;
             }
@@ -136,10 +142,14 @@ class Lua_converter {
         var ret_code = (is_in ? "" : this.getIndentation()) + this.convertFunc(object.base.name);
         ret_code += "(";
 
-        for (let i = 0; object.arguments[i]; i++) {
-            if (i != 0)
-                ret_code += ", ";
-            ret_code += this.Lua.getObject(object.arguments[i]);
+        if (!FUNCS_SPECIAL_FORMAT[object.base.name]) {
+            for (let i = 0; object.arguments[i]; i++) {
+                if (i != 0)
+                    ret_code += ", ";
+                ret_code += this.Lua.getObject(object.arguments[i]);
+            }
+        } else {
+            ret_code += FUNCS_SPECIAL_FORMAT[object.base.name](this.Lua, object.arguments);
         }
         ret_code += ")";
         if (!is_in)
@@ -188,6 +198,24 @@ class Lua_converter {
         return (ret_code);
     }
 
+    convertWhile(object) {
+        var ret_code = this.getIndentation();
+        const start_indentation = this.getIndentation();
+
+        ret_code += "while ("
+        if (this.Lua.getObject(object.condition)) {
+            ret_code += this.Lua.getObject(object.condition);
+        } else {
+            ret_code += this.Lua.getObject(object.condition.left);
+            ret_code += " " + object.condition.operator + " ";
+            ret_code += this.Lua.getObject(object.condition.right);
+        }
+        ret_code += ") {"
+        ret_code += "\n" + this.convertCode(object.body);
+        ret_code += "\n" + start_indentation + "}";
+        return (ret_code);
+    }
+
     convertReturn(object) {
         var ret_code = this.getIndentation();
 
@@ -204,9 +232,9 @@ class Lua_converter {
         const left = this.Lua.getObject(object.left);
         const right = this.Lua.getObject(object.right);
         if (this.convertType(object.left) == "char *" || this.convertType(object.right) == "char *") {
-            ret_code += "my_strcat2(" + left + ", " + right + ", -1, 0)";
+            ret_code += "my_strconcat(" + left + ", " + right + ")";
         } else if (this.convertType(object.left) == "int" || this.convertType(object.right) == "int") {
-            ret_code += left + " + " + right;
+            ret_code += left + ` ${object.operator} ` + right;
         }
         return (ret_code);
     }

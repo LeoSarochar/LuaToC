@@ -84,15 +84,15 @@ int    pre_parse(va_list ap, int i, char *str)
     result = run_func(c, ap);
     if (result.result == 1 && result.str != NULL)
         my_putstr(result.str);
-    else if (result.result != 0) {
-        return (1)
+    else if (result.result == 0) {
+        x = parse(i, str, ap);
+        if (x == 1) {
+            my_putchar('%');
+            my_putchar(c);
+        }
+        return (x);
     }
-    x = parse(i, str, ap);
-    if (x == 1) {
-        my_putchar('%');
-        my_putchar(c);
-    }
-    return (x);
+    return (1);
 }
 
 int    my_printf(char *str, ...)

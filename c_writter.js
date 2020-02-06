@@ -12,6 +12,7 @@ class C_writter {
         var includes = "#include <stdlib.h>\n";
         includes += "#include <unistd.h>\n";
         includes += "#include <stdio.h>\n";
+        includes += "#include \"../lib/my/my.h\"\n";
         return (includes);
     }
 
@@ -22,7 +23,7 @@ class C_writter {
         func += return_type;
         func += "    ";
         func += name + "(";
-        
+
         let nb_args = 0;
         for (let i = 0; args[i]; i++)
             nb_args++;

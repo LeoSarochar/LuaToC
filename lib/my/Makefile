@@ -30,6 +30,7 @@ SRC	=	my_compute_power_rec.c  		\
 		my_strcmp.c 				\
 		my_strcpy.c 				\
 		my_strdup.c 				\
+		my_split.c					\
 		my_str_isalpha.c    			\
 		my_str_islower.c    			\
 		my_str_isnum.c  			\
@@ -56,11 +57,10 @@ SRC	=	my_compute_power_rec.c  		\
 		my_printf_funcs_bases.c			\
 		my_printf_utils.c			\
 		my_putnbr_base.c			\
-		my_nbr_to_str.c
 
 OBJ	=	$(SRC:.c=.o)
 
-all:	compile lib_compile lib_copy header_copy
+all:	compile lib_compile lib_copy
 
 compile:	$(OBJ)
 
