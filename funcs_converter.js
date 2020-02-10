@@ -5,8 +5,13 @@ const Funcs_conerter = {
         for (let i = 0; args[i]; i++) {
             if (i != 0)
                 va_args += ", ";
+            const obj = Lua.getObject(args[i]);
+            let type = Lua.getVariableType(args[i]);
+
             va_args += Lua.getObject(args[i]);
-            switch (Lua.getVariableType(args[i])) {
+            if (FUNCS[obj.split("(")[0]])
+                type = Lua.converter.convertType({type: FUNCS[obj.split("(")[0]].ret_type});
+            switch (type) {
                 case "int":
                     arg1 += "%d";
                     break;

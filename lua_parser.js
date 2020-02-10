@@ -36,6 +36,9 @@ class Lua_parser {
             case "IfStatement":
                 ret_code += this.converter.convertIf(object);
                 break;
+            case "ForGenericStatement":
+                ret_code += this.converter.convertForGeneric(object);
+                break;
             case "ForNumericStatement":
                 ret_code += this.converter.convertForNumeric(object);
                 break;
@@ -46,13 +49,22 @@ class Lua_parser {
                 ret_code += this.converter.convertReturn(object);
                 break;
             case "IndexExpression":
-                ret_code += object.base.name + "[" + object.index.raw + "]";
+                if (object.index.raw )
+                    ret_code += object.base.name + "[" + object.index.raw + "]";
+                else
+                    ret_code += object.base.name + "[" + object.index.name + "]";
                 break;
             case "BinaryExpression":
                 ret_code += this.converter.convertBinary(object);
                 break;
+            case "TableConstructorExpression":
+                ret_code += this.converter.convertTableConstructor(object);
+                break;
+            case "BreakStatement":
+                ret_code += this.converter.getIndentation() + "break;";
+                break;
             default:
-                ret_code += object.raw;
+                ret_code += this.converter.convertExpression(object);
                 break;
         }
         return (ret_code);
@@ -81,22 +93,54 @@ class Lua_parser {
         return (objects);
     }
 
+    replaceVarName(name, new_name, arr_index, obj = this.getCurrentScope().body) {
+        for (const i in obj) {
+            if (Array.isArray(obj[i]) || typeof obj[i] === 'object') {
+                if (obj[i].type == "Identifier" && obj[i].name == name) {
+                    if (new_name.includes("[")) {
+                        obj[i].type = "IndexExpression"
+                        obj[i].base = {}
+                        obj[i].base.name = new_name.split("[")[0];
+                        obj[i].base.type = "Identifier"
+                        obj[i].index = {}
+                        obj[i].index.type = "NumericLiteral"
+                        obj[i].index.value = arr_index
+                        obj[i].index.raw = arr_index.toString()
+                    }
+                    obj[i].name = new_name
+                }
+                this.replaceVarName(name, new_name, arr_index, obj[i]);
+            }
+        }
+    }
+
     getVariableDeclaration(name, body = this.getCurrentScope().body) {
         const tbl_body = this.parseBody(body);
 
         for (let i = 0; tbl_body[i]; i++) {
             const object = tbl_body[i];
 
-            if (object.type == "LocalStatement") {
-                for (let j = 0; object.variables[j]; j++) {
-                    if (object.variables[j].name == name)
+            switch (object.type) {
+                case "LocalStatement":
+                    for (let j = 0; object.variables[j]; j++) {
+                        if (object.variables[j].name == name)
+                            return (object);
+                    }
+                    break;
+                case "FunctionDeclaration":
+                    for (let j = 0; object.parameters[j]; j++) {
+                        if (object.parameters[j].name == name)
+                            return [object, j];
+                    }
+                    break;
+                case "ForNumericStatement":
+                    if (object.variable.name == name)
                         return (object);
-                }
-            } else if (object.type == "FunctionDeclaration") {
-                for (let j = 0; object.parameters[j]; j++) {
-                    if (object.parameters[j].name == name)
-                        return [object, j];
-                }
+                    break;
+                case "ForGenericStatement":
+                    if (object.variables[0].name == name)
+                        return (object);
+                    break;
             }
         }
         return (null);

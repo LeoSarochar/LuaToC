@@ -1,4 +1,4 @@
-const {TYPES, FUNCS} = require('./types');
+const {TYPES, FUNCS, EXPRESSIONS} = require('./types');
 
 class Lua_converter {
 
@@ -49,6 +49,20 @@ class Lua_converter {
         return (ret_code);
     }
 
+    convertExpression(object) {
+        let ret_code = "";
+
+        switch (object.raw) {
+            case "nil":
+                ret_code = "NULL";
+                break;
+            default:
+                ret_code = object.raw;
+        }
+
+        return (ret_code);
+    }
+
     convertFunc(name) {
         if (FUNCS[name])
             return (FUNCS[name].name);
@@ -70,12 +84,23 @@ class Lua_converter {
                     break;
                 case "IndexExpression":
                     ret_type = this.convertType(object.base);
+                    if (ret_type.includes("**")) //special case for char **
+                        ret_type = ret_type.replace('*', "");
+                    else
+                        ret_type = ret_type.replace(' *', "");
                     break;
                 case "Identifier":
+                    if (object.raw == "nil")
+                        return ("char *");
                     var declaration = this.Lua.getVariableDeclaration(object.name);
-                    if (declaration)
-                        ret_type = this.convertType(declaration.init[0]);
-                    else {
+                    if (declaration) {
+                        if (declaration.init)
+                            ret_type = this.convertType(declaration.init[0]);
+                        else if (declaration.start)
+                            ret_type = this.convertType(declaration.start);
+                        else
+                            ret_type = "int";
+                    } else {
                         declaration = this.Lua.getVariableDeclaration(object.name, this.Lua.ast.body)
                         const call = this.Lua.getCallStatement(declaration[0].identifier.name);
                         if (call) {
@@ -106,7 +131,6 @@ class Lua_converter {
 
     convertVariable(object) {
         var ret_code = "";
-
         for (let i = 0; object.variables[i]; i++) {
             if (i != 0)
                 ret_code += "\n";
@@ -116,7 +140,7 @@ class Lua_converter {
             if (!this.convertType(object.init[i]).includes("*"))
                 ret_code += " ";
             ret_code += object.variables[i].name;
-            ret_code += " = " + object.init[i].raw;
+            ret_code += " = " + this.Lua.getObject(object.init[i]);
             ret_code += ";";
         }
         return (ret_code);
@@ -157,16 +181,43 @@ class Lua_converter {
         return (ret_code);
     }
 
+    convertCondition(left, operator, right) {
+        var ret_code = ""
+
+        if (left.raw == "nil" || right.raw == "nil") {
+            ret_code += this.Lua.getObject(left);
+            ret_code += " " + operator + " ";
+            ret_code += this.Lua.getObject(right)
+            return (ret_code);
+        }
+        if (operator == "~=")
+            operator = "!="
+        if (this.Lua.getVariableType(left) == "char *" || this.Lua.getVariableType(right) == "char *") {
+            let prefix = "!";
+            if (operator == "!=")
+                prefix = "";
+            ret_code += prefix + "my_strcmp(" + this.Lua.getObject(left)+", " + this.Lua.getObject(right) + ")";
+        } else {
+            ret_code += this.Lua.getObject(left);
+            ret_code += " " + operator + " ";
+            ret_code += this.Lua.getObject(right)
+        }
+        return (ret_code)
+    }
+
     convertIf(object) {
         var ret_code = this.getIndentation();
         const start_indentation = this.getIndentation();
-
+        let brackets = [" {", "\n" + start_indentation + "}"];
         for (let i = 0; object.clauses[i]; i++) {
+            const in_code = this.convertCode(object.clauses[i].body)
+            if (in_code.split("\n").length == 1)
+                brackets = ["", ""];
             switch (object.clauses[i].type) {
                 case "ElseClause":
-                    ret_code += " else {";
-                    ret_code += "\n" + this.convertCode(object.clauses[i].body);
-                    ret_code += "\n" + start_indentation + "}";
+                    ret_code += " else " + brackets[0];
+                    ret_code += "\n" + in_code;
+                    ret_code += brackets[1];
                     break;
                 case "ElseifClause":
                     ret_code += " else if (";
@@ -176,11 +227,10 @@ class Lua_converter {
                     break;
             }
             if (object.clauses[i].type != "ElseClause") {
-                ret_code += this.Lua.getObject(object.clauses[i].condition.left);
-                ret_code += " " + object.clauses[i].condition.operator + " ";
-                ret_code += this.Lua.getObject(object.clauses[i].condition.right) + ") {";
-                ret_code += "\n" + this.convertCode(object.clauses[i].body);
-                ret_code += "\n" + start_indentation + "}";
+                ret_code += this.convertCondition(object.clauses[i].condition.left, object.clauses[i].condition.operator, object.clauses[i].condition.right);
+                ret_code += ")" + brackets[0];
+                ret_code += "\n" + in_code;
+                ret_code += brackets[1];
             }
         }
         return (ret_code);
@@ -189,12 +239,36 @@ class Lua_converter {
     convertForNumeric(object) {
         var ret_code = this.getIndentation();
         const start_indentation = this.getIndentation();
-
+        let step = 1;
+        if (object.step)
+            step = this.Lua.getObject(object.step);
+        let brackets = [" {", "\n" + start_indentation + "}"];
+        const in_code = this.convertCode(object.body, object)
+        if (in_code.split("\n").length == 1)
+            brackets = ["", ""];
         ret_code += "for (int " + object.variable.name + " = " + object.start.raw + "; ";
         ret_code += object.variable.name + " < " + this.Lua.getObject(object.end) + "; ";
-        ret_code += object.variable.name + " += 1) {";
-        ret_code += "\n" + this.convertCode(object.body);
-        ret_code += "\n" + start_indentation + "}";
+        ret_code += object.variable.name + " += " + step + ")" + brackets[0];
+        ret_code += "\n" + in_code;
+        ret_code += brackets[1];
+        return (ret_code);
+    }
+
+    convertForGeneric(object) {
+        var ret_code = this.getIndentation();
+        const start_indentation = this.getIndentation();
+        const pairs_arg = object.iterators[0].arguments[0].name + "[" + object.variables[0].name + "]";
+        this.Lua.replaceVarName(object.variables[1].name, pairs_arg, object.variables[0].name, object.body);
+
+        let brackets = [" {", "\n" + start_indentation + "}"];
+        const in_code = this.convertCode(object.body)
+        if (in_code.split("\n").length == 1)
+            brackets = ["", ""];
+        ret_code += "for (int " + object.variables[0].name + " = 0; ";
+        ret_code += pairs_arg + "; ";
+        ret_code += object.variables[0].name + " += 1)" + brackets[0];
+        ret_code += "\n" + in_code;
+        ret_code += brackets[1]
         return (ret_code);
     }
 
@@ -202,17 +276,19 @@ class Lua_converter {
         var ret_code = this.getIndentation();
         const start_indentation = this.getIndentation();
 
+        let brackets = [" {", "\n" + start_indentation + "}"];
+        const in_code = this.convertCode(object.body)
+        if (in_code.split("\n").length == 1)
+            brackets = ["", ""];
         ret_code += "while ("
         if (this.Lua.getObject(object.condition)) {
             ret_code += this.Lua.getObject(object.condition);
         } else {
-            ret_code += this.Lua.getObject(object.condition.left);
-            ret_code += " " + object.condition.operator + " ";
-            ret_code += this.Lua.getObject(object.condition.right);
+            ret_code += this.convertCondition(object.condition.left, object.condition.operator, object.condition.right);
         }
-        ret_code += ") {"
-        ret_code += "\n" + this.convertCode(object.body);
-        ret_code += "\n" + start_indentation + "}";
+        ret_code += ")" + brackets[0]
+        ret_code += "\n" + in_code;
+        ret_code += brackets[1];
         return (ret_code);
     }
 
@@ -236,6 +312,22 @@ class Lua_converter {
         } else if (this.convertType(object.left) == "int" || this.convertType(object.right) == "int") {
             ret_code += left + ` ${object.operator} ` + right;
         }
+        return (ret_code);
+    }
+
+    convertTableConstructor(object) {
+        var ret_code = "{";
+
+        const fields = object.fields
+        for (let i = 0; fields[i]; i++) {
+            if (i != 0)
+                ret_code += ", ";
+            if (fields[i].value.raw)
+                ret_code += fields[i].value.raw
+            else
+                ret_code += fields[i].value.name
+        }
+        ret_code += "}";
         return (ret_code);
     }
 }

@@ -50,8 +50,7 @@ function gen_func(func)
 }
 
 function Gen_C_Code(ast, export_path) {
-    var C_code = "";
-
+    console.log("Generating C code...")
     Converter = new Lua_converter();
     Lua = new Lua_parser(ast, Converter);
     Converter.setParser(Lua);
@@ -67,9 +66,8 @@ function Gen_C_Code(ast, export_path) {
         switch (object.type) {
             case "FunctionDeclaration":
                 AddLine(gen_func(object));
-        } 
+        }
     }
-
     write_c_file(export_path);
 }
 
