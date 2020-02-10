@@ -25,20 +25,12 @@
 --     end
 --     return 0
 -- end
+
 function main(ac, av)
-    local p = 3
-    local u = 0
-    for i = 0, 1000 do
-        print(av[i]+"\n")
-        if (av[i] == nil) then
-            break
-        end
-    end
-    while (p) do
-        u = u * tonumber(av[0])
-        print("break the for!\n")
-        p = p - 1
-    end
+    local str = "sal"
+    local leo = ""
+    leo = str .. "wesh"
+    print(leo)
 end
 
 -- function main(ac, av)

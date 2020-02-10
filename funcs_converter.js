@@ -6,6 +6,11 @@ const Funcs_conerter = {
             if (i != 0)
                 va_args += ", ";
             const obj = Lua.getObject(args[i]);
+
+            if (obj.match(/^\".*\"$/)) {
+                arg1 += obj.replace(/\"/g, "");
+                continue;
+            }
             let type = Lua.getVariableType(args[i]);
 
             va_args += Lua.getObject(args[i]);
@@ -23,7 +28,10 @@ const Funcs_conerter = {
                     break;
             }
         }
-        return (arg1 + "\", " + va_args);
+        if (va_args != "")
+            return (arg1 + "\", " + va_args);
+        else
+            return (arg1 + "\"");
     }
 }
 
