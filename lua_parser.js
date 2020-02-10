@@ -49,10 +49,14 @@ class Lua_parser {
                 ret_code += this.converter.convertReturn(object);
                 break;
             case "IndexExpression":
-                if (object.index.raw )
-                    ret_code += object.base.name + "[" + object.index.raw + "]";
+                ret_code += this.getObject(object.base) + "["
+                if (object.index.raw)
+                    ret_code += object.index.raw;
+                else if (object.index.name)
+                    ret_code += object.index.name;
                 else
-                    ret_code += object.base.name + "[" + object.index.name + "]";
+                    ret_code += this.getObject(object.index);
+                ret_code += "]";
                 break;
             case "BinaryExpression":
                 ret_code += this.converter.convertBinary(object);
@@ -98,16 +102,16 @@ class Lua_parser {
             if (Array.isArray(obj[i]) || typeof obj[i] === 'object') {
                 if (obj[i].type == "Identifier" && obj[i].name == name) {
                     if (new_name.includes("[")) {
-                        obj[i].type = "IndexExpression"
-                        obj[i].base = {}
+                        obj[i].type = "IndexExpression";
+                        obj[i].base = {};
                         obj[i].base.name = new_name.split("[")[0];
-                        obj[i].base.type = "Identifier"
-                        obj[i].index = {}
-                        obj[i].index.type = "NumericLiteral"
-                        obj[i].index.value = arr_index
-                        obj[i].index.raw = arr_index.toString()
+                        obj[i].base.type = "Identifier";
+                        obj[i].index = {};
+                        obj[i].index.type = "NumericLiteral";
+                        obj[i].index.value = arr_index;
+                        obj[i].index.raw = arr_index.toString();
                     }
-                    obj[i].name = new_name
+                    obj[i].name = new_name;
                 }
                 this.replaceVarName(name, new_name, arr_index, obj[i]);
             }

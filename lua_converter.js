@@ -258,6 +258,9 @@ class Lua_converter {
         var ret_code = this.getIndentation();
         const start_indentation = this.getIndentation();
         const pairs_arg = object.iterators[0].arguments[0].name + "[" + object.variables[0].name + "]";
+        console.log("-----FOR------")
+        console.log(object)
+        console.log("PAIRS : " + pairs_arg)
         this.Lua.replaceVarName(object.variables[1].name, pairs_arg, object.variables[0].name, object.body);
 
         let brackets = [" {", "\n" + start_indentation + "}"];

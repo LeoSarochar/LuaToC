@@ -27,9 +27,20 @@
 -- end
 
 function main(ac, av)
-    local str = "sal"
+    local str = "dddddddddddddddddd"
     local leo = ""
     leo = str .. "wesh"
+    if (1 == 1) then
+        print("tamere")
+    end
+    for k, v in pairs(av) do
+        for i, c in pairs(v) do
+            print(c)
+        end
+    end
+    while(1) do
+        break;
+    end
     print(leo)
 end
 

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const colors = require('colors');
 
 const C_writter = require('./c_writter');
 const Lua_parser = require('./lua_parser');
@@ -50,7 +51,7 @@ function gen_func(func)
 }
 
 function Gen_C_Code(ast, export_path) {
-    console.log("Generating C code...")
+    console.log("Generating C code...\n".yellow)
     Converter = new Lua_converter();
     Lua = new Lua_parser(ast, Converter);
     Converter.setParser(Lua);
