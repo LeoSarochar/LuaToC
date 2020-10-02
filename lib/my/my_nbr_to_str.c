@@ -20,7 +20,7 @@ void reverse(char *str, int length)
     }
 }
 
-char    *my_nbr_to_str(int num)
+char    *my_atoi(int num)
 {
     int i = 0;
     char *str = malloc(sizeof(char) * 12);

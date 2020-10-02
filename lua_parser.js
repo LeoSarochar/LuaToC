@@ -85,13 +85,28 @@ class Lua_parser {
                 for (let k = 0; tbl_body[k]; k++)
                     objects.push(tbl_body[k]);
             } else if (object.clauses) {
+                objects.push(object);
                 for (let j = 0; object.clauses[j]; j++) {
                     const tbl_body = this.parseBody(object.clauses[j].body);
                     for (let k = 0; tbl_body[k]; k++)
                         objects.push(tbl_body[k]);
+                    if (object.clauses[j].condition) {
+                        if (!object.clauses[j].condition.left && !object.clauses[j].condition.right)
+                            objects.push(object.clauses[j].condition);
+                        else {
+                            if (object.clauses[j].condition.left)
+                                objects.push(object.clauses[j].condition.left);
+                            if (object.clauses[j].condition.right)
+                                objects.push(object.clauses[j].condition.right);
+                        }
+                    }
                 }
-            } else {
+            } else if (object.init) {
                 objects.push(object);
+                for (let i = 0; object.init[i]; i++)
+                    objects.push(object.init[i]);
+            } else {
+                    objects.push(object);
             }
         }
         return (objects);
@@ -120,10 +135,8 @@ class Lua_parser {
 
     getVariableDeclaration(name, body = this.getCurrentScope().body) {
         const tbl_body = this.parseBody(body);
-
         for (let i = 0; tbl_body[i]; i++) {
             const object = tbl_body[i];
-
             switch (object.type) {
                 case "LocalStatement":
                     for (let j = 0; object.variables[j]; j++) {
@@ -156,6 +169,8 @@ class Lua_parser {
         for (let i = 0; tbl_body[i]; i++) {
             const object = tbl_body[i];
             if (object.type == "CallStatement" && object.expression.base.name == name) {
+                return (object.expression);
+            } else if (object.type == "CallExpression" && object.base.name == name) {
                 return (object);
             }
         }

@@ -30,19 +30,26 @@ function gen_func(func)
     if (nb_args > 0) {
         const call = Lua.getCallStatement(func.identifier.name);
         if (call) {
-            for (let i = 0; call.expression.arguments[i]; i++) {
+            for (let i = 0; call.arguments[i]; i++) {
                 let arg = {};
                 arg.name = func.parameters[i].name;
-                arg.type = Converter.convertType(call.expression.arguments[i]);
+                arg.type = Converter.convertType(call.arguments[i]);
                 args[i] = arg;
             }
         } else { //Main
-            args[0] = {};
-            args[0].name = func.parameters[0].name;
-            args[0].type = "int";
-            args[1] = {};
-            args[1].name = func.parameters[1].name;
-            args[1].type = "char **";
+            try {
+                args[0] = {};
+                args[0].name = func.parameters[0].name;
+                args[0].type = "int";
+                args[1] = {};
+                args[1].name = func.parameters[1].name;
+                args[1].type = "char **";
+            } catch (e) {
+                if (process.argv.includes("-v"))
+                    console.log(e)
+                console.log(("ERROR -> Function " + func.identifier.name + " never called.").red);
+                process.exit(1);
+            }
         }
     }
     const body = Converter.convertCode(func.body);
@@ -52,6 +59,7 @@ function gen_func(func)
 
 function Gen_C_Code(ast, export_path) {
     console.log("Generating C code...\n".yellow)
+    C_code = "";
     Converter = new Lua_converter();
     Lua = new Lua_parser(ast, Converter);
     Converter.setParser(Lua);

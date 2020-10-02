@@ -40,7 +40,7 @@ char    *my_strcat2(char *str, char *str2, int max, int start)
     return (ret);
 }
 
-char    *my_strconcat(char *str, char *str2)
+char    *strc(char *str, char *str2)
 {
     char *ret = NULL;
     int index = 0;

@@ -17,10 +17,12 @@ EXPRESSIONS = {
 FUNCS = {
     "print":        {name: "my_printf", ret_type: "NumericLiteral"},
     "tonumber":     {name: "my_getnbr", ret_type: "NumericLiteral"},
-    "tostring":     {name: "my_nbr_to_str", ret_type: "StringLiteral"},
+    "tostring":     {name: "my_atoi", ret_type: "StringLiteral"},
+    "isnumber":     {name: "my_str_isnum", ret_type: "NumericLiteral"},
+    "isalpha":      {name: "my_str_isalpha", ret_type: "NumericLiteral"},
     "lowercase":    {name: "my_strlowcase", ret_type: "StringLiteral"},
     "upcase":       {name: "my_strupcase", ret_type: "StringLiteral"},
-    "my_strconcat": {name: "my_strconcat", ret_type: "StringLiteral"}
+    "strc":         {name: "strc", ret_type: "StringLiteral"}
 }
 
 FUNCS_SPECIAL_FORMAT = {

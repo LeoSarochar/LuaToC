@@ -21,7 +21,8 @@ class C_writter {
         if (is_static)
             func += "static ";
         func += return_type;
-        func += "    ";
+        if (!return_type.includes("*"))
+            func += " ";
         func += name + "(";
 
         let nb_args = 0;

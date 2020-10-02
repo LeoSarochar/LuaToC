@@ -66,5 +66,5 @@ char *my_realloc(char *, int);
 int my_putnbr_base(int, char const *);
 char **my_split(char const *, char);
 int my_printf(char *, ...);
-char *my_strconcat(char *, char *);
-char *my_nbr_to_str(int);
+char *strc(char *, char *);
+char *my_atoi(int);

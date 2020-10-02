@@ -104,8 +104,8 @@ class Lua_converter {
                         declaration = this.Lua.getVariableDeclaration(object.name, this.Lua.ast.body)
                         const call = this.Lua.getCallStatement(declaration[0].identifier.name);
                         if (call) {
-                            for (let i = 0; call.expression.arguments[i]; i++) {
-                                const arg = call.expression.arguments[i];
+                            for (let i = 0; call.arguments[i]; i++) {
+                                const arg = call.arguments[i];
                                 if (i == declaration[1])
                                     ret_type = this.convertType(arg);
                             }
@@ -118,6 +118,9 @@ class Lua_converter {
                     } else {
                         ret_type = this.Lua.getSpecificFunctionReturnType(object.base.name);
                     }
+                    break;
+                case "BinaryExpression":
+                    ret_type = this.convertType(object.left);
                     break;
             }
         }
@@ -184,6 +187,16 @@ class Lua_converter {
     convertCondition(left, operator, right) {
         var ret_code = ""
 
+        if (operator == "and")
+            operator = "&&";
+        else if (operator == "or")
+            operator = "||";
+        if (!right) {
+            right = {};
+            right.type = "NumericLitteral";
+            right.raw = "1";
+            operator = "==";
+        }
         if (left.raw == "nil" || right.raw == "nil") {
             ret_code += this.Lua.getObject(left);
             ret_code += " " + operator + " ";
@@ -215,19 +228,31 @@ class Lua_converter {
                 brackets = ["", ""];
             switch (object.clauses[i].type) {
                 case "ElseClause":
-                    ret_code += " else " + brackets[0];
+                    if (ret_code.split("").splice(-1) != "}")
+                        ret_code += "\n" + start_indentation
+                    else
+                        ret_code += " "
+                    ret_code += "else " + brackets[0];
                     ret_code += "\n" + in_code;
                     ret_code += brackets[1];
                     break;
                 case "ElseifClause":
-                    ret_code += " else if (";
+                    if (ret_code.split("").splice(-1) != "}")
+                        ret_code += "\n"
+                    else
+                        ret_code += " "
+                    ret_code += "else if (";
                     break;
                 case "IfClause":
                     ret_code += "if (";
                     break;
             }
             if (object.clauses[i].type != "ElseClause") {
-                ret_code += this.convertCondition(object.clauses[i].condition.left, object.clauses[i].condition.operator, object.clauses[i].condition.right);
+                if (object.clauses[i].condition.left) {
+                    ret_code += this.convertCondition(object.clauses[i].condition.left, object.clauses[i].condition.operator, object.clauses[i].condition.right);
+                } else {
+                    ret_code += this.convertCondition(object.clauses[i].condition);
+                }
                 ret_code += ")" + brackets[0];
                 ret_code += "\n" + in_code;
                 ret_code += brackets[1];
@@ -258,9 +283,6 @@ class Lua_converter {
         var ret_code = this.getIndentation();
         const start_indentation = this.getIndentation();
         const pairs_arg = object.iterators[0].arguments[0].name + "[" + object.variables[0].name + "]";
-        console.log("-----FOR------")
-        console.log(object)
-        console.log("PAIRS : " + pairs_arg)
         this.Lua.replaceVarName(object.variables[1].name, pairs_arg, object.variables[0].name, object.body);
 
         let brackets = [" {", "\n" + start_indentation + "}"];
@@ -311,7 +333,7 @@ class Lua_converter {
         const left = this.Lua.getObject(object.left);
         const right = this.Lua.getObject(object.right);
         if (this.convertType(object.left) == "char *" || this.convertType(object.right) == "char *") {
-            ret_code += "my_strconcat(" + left + ", " + right + ")";
+            ret_code += "strc(" + left + ", " + right + ")";
         } else if (this.convertType(object.left) == "int" || this.convertType(object.right) == "int") {
             ret_code += left + ` ${object.operator} ` + right;
         }
