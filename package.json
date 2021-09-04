@@ -1,0 +1,25 @@
+{
+  "name": "luatoc",
+  "version": "1.0.0",
+  "description": "Tool to convert Lua Code to C",
+  "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeoSarochar/LuaToC.git"
+  },
+  "author": "Léo Sarochar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LeoSarochar/LuaToC/issues"
+  },
+  "homepage": "https://github.com/LeoSarochar/LuaToC#readme",
+  "dependencies": {
+    "colors": "^1.4.0"
+  }
+}
